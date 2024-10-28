@@ -115,7 +115,6 @@ class MainActivity : ComponentActivity() {
      */
     override fun onDestroy() {
         super.onDestroy()
-        // Libera el MediaPlayer cuando la actividad se destruye
         if (::mediaPlayer.isInitialized) {
             mediaPlayer.release()
         }
