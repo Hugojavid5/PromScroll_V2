@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Scroll_infinito</string>
+    <string name="anuncioPatata">Escribe la tarea</string>
+    <string name="botonPulsar">Púlsame</string>
+</resources>
