@@ -29,11 +29,9 @@ class TareasViewHolder(view:View):RecyclerView.ViewHolder(view) {
      * @param tarea la tarea a dibujar
      * @onItemDone el elmento que va a dibujar
      */
-    fun render(tarea:String, onItemDone:(Int) -> Unit){
-        tvTarea.text = tarea
-        // añadimos un onclicklistener a la imagen, llamara a una funcion en el TareaAdapter
-        ivTareaHecha.setOnClickListener { onItemDone(adapterPosition)  }
-
+    fun render(task: String, onItemDone: (Int) -> Unit) {
+        tvTarea.text = task // Establece el texto de la tarea
+        ivTareaHecha.setOnClickListener { onItemDone(adapterPosition) } // Configura el clic en la imagen
     }
 
 }

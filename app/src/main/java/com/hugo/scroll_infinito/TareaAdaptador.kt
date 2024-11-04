@@ -12,7 +12,7 @@ import com.hugo.scroll_infinito.R
  * como vamos a llamar a este adaptador desde un SetOnClickListener y queremos hacer referencia aquien le ha llamado, ponemos el onItemDone
  */
 
-class TareaAdaptador(private val tareas: List<String>, private val onItemDone: (Int) -> Unit):RecyclerView.Adapter<TareasViewHolder>() {
+class TareaAdaptador( private val tareas: MutableList<Task>, private val onItemDone: (Int) -> Unit):RecyclerView.Adapter<TareasViewHolder>() {
 
 
  /**
@@ -34,7 +34,7 @@ class TareaAdaptador(private val tareas: List<String>, private val onItemDone: (
   * Le pasamos el elemento onItemDone para que sepa quien le ha pulsado
   */
  override fun onBindViewHolder(holder: TareasViewHolder, position: Int) {
-   holder.render(tareas[position], onItemDone)
+  holder.render(tareas[position].description) { onItemDone(position) }
  }
 
 

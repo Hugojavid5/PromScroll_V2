@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.hugo.scroll_infinito.TaskApplication.Companion.prefs
+import android.util.Log
 
 /**
  * MainActivity es la actividad principal de la aplicación, que permite a los usuarios
@@ -70,7 +71,7 @@ class MainActivity : ComponentActivity() {
      * Inicializa el RecyclerView y carga las tareas desde las preferencias.
      */
     private fun initRecyclerView() {
-        tareas = prefs.recuperarTareas()
+        tareas = (application as TareaAdaptador).dbHelper.getTasks()
         rvTareas.layoutManager = LinearLayoutManager(this)
         adaptador = TareaAdaptador(tareas) { eliminarTarea(it) }
         rvTareas.adapter = adaptador

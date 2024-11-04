@@ -12,13 +12,10 @@ class TaskApplication:Application() {
      * Para que sea accesible desde toda la aplicacíon, lo pongo aquí, uso en lateInit porque no
      * tengo baseContext para inizalizarlo
      */
-    companion object{
-        lateinit var prefs: Preferencias
-    }
+    lateinit var dbHelper: DatabaseHelper
 
     override fun onCreate() {
         super.onCreate()
-        prefs =  Preferencias(baseContext)
-
+        dbHelper = DatabaseHelper(this)
     }
 }
