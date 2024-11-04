@@ -34,6 +34,7 @@ class MainActivity : ComponentActivity() {
 
         // Inicializa el MediaPlayer con el archivo de sonido
         mediaPlayer = MediaPlayer.create(this, R.raw.sonido_aniadir)
+        mediaPlayer = MediaPlayer.create(this, R.raw.sonido_eliminar)
     }
 
     /**
@@ -51,13 +52,16 @@ class MainActivity : ComponentActivity() {
      * @param newTask La tarea que se va a añadir.
      */
     private fun addTask(newTask: String) {
-        tareas.add(newTask)
-        adaptador.notifyDataSetChanged()
-        prefs.salvarInformacion(tareas)
+        // Verifica que la tarea no esté vacía
+        if (newTask.isNotBlank()) {
+            tareas.add(newTask)
+            adaptador.notifyDataSetChanged()
+            prefs.salvarInformacion(tareas)
 
-        // Reproduce sonido si el MediaPlayer está inicializado
-        if (::mediaPlayer.isInitialized) {
-            mediaPlayer.start()
+            // Reproduce sonido si el MediaPlayer está inicializado
+            if (::mediaPlayer.isInitialized) {
+                mediaPlayer.start()
+            }
         }
     }
 
@@ -77,9 +81,15 @@ class MainActivity : ComponentActivity() {
      * @param position La posición de la tarea a eliminar.
      */
     private fun eliminarTarea(position: Int) {
+        // Elimina la tarea de la lista
         tareas.removeAt(position)
         adaptador.notifyDataSetChanged()
         prefs.salvarInformacion(tareas)
+
+        // Reproduce sonido si el MediaPlayer para eliminar está inicializado
+        if (::mediaPlayer.isInitialized) {
+            mediaPlayer.start()
+        }
     }
 
     /**
