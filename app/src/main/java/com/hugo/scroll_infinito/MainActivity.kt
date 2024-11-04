@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import androidx.activity.ComponentActivity
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.hugo.scroll_infinito.TaskApplication.Companion.prefs
@@ -73,6 +74,18 @@ class MainActivity : ComponentActivity() {
         rvTareas.layoutManager = LinearLayoutManager(this)
         adaptador = TareaAdaptador(tareas) { eliminarTarea(it) }
         rvTareas.adapter = adaptador
+
+        // Configuración de Swipe to Delete para eliminar tareas al deslizar
+        val itemTouchHelperCallback = object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder) = false
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                eliminarTarea(viewHolder.adapterPosition) // Llama al método para eliminar la tarea en la posición desliz
+            }
+        }
+
+        ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(rvTareas) // Asigna el helper al RecyclerView
+
     }
 
     /**
