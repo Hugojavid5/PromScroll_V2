@@ -8,8 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.hugo.scroll_infinito.TaskApplication.Companion.prefs
-import android.util.Log
+
 
 /**
  * MainActivity es la actividad principal de la aplicación, que permite a los usuarios
@@ -24,6 +23,7 @@ class MainActivity : ComponentActivity() {
     private var tareas = mutableListOf<String>()
     private lateinit var adaptador: TareaAdaptador
     private lateinit var mediaPlayer: MediaPlayer
+    var tasks = mutableListOf<Task>()
 
     /**
      * Método llamado cuando se crea la actividad.
@@ -44,7 +44,6 @@ class MainActivity : ComponentActivity() {
      */
     private fun initUI() {
         initView()
-        initListeners()
         initRecyclerView()
     }
 
@@ -53,14 +52,15 @@ class MainActivity : ComponentActivity() {
      *
      * @param newTask La tarea que se va a añadir.
      */
-    private fun addTask(newTask: String) {
-        // Verifica que la tarea no esté vacía
-        if (newTask.isNotBlank()) {
-            tareas.add(newTask)
-            adaptador.notifyDataSetChanged()
-            prefs.salvarInformacion(tareas)
-
-            // Reproduce sonido si el MediaPlayer está inicializado
+    private fun addTask() {
+        val taskToAdd = textoEmail.text.toString().trim()
+        if (taskToAdd.isNotEmpty()) { // Verificar que el campo no esté vacío
+            val dbHelper = (application as TaskApplication).dbHelper
+            val taskId = dbHelper.addTarea(taskToAdd) // Inserta en la base de datos
+            val newTask = Task(id = taskId, tarea = taskToAdd)
+            tasks.add(newTask) // Añadir la nueva tarea a la lista
+            adaptador.notifyDataSetChanged() // Notificar al adaptador que los datos han cambiado
+            textoEmail.setText("") // Limpiar el campo de texto
             if (::mediaPlayer.isInitialized) {
                 mediaPlayer.start()
             }
@@ -71,9 +71,9 @@ class MainActivity : ComponentActivity() {
      * Inicializa el RecyclerView y carga las tareas desde las preferencias.
      */
     private fun initRecyclerView() {
-        tareas = (application as TareaAdaptador).dbHelper.getTasks()
+        tasks = (application as TaskApplication).dbHelper.getTodasTareas()
         rvTareas.layoutManager = LinearLayoutManager(this)
-        adaptador = TareaAdaptador(tareas) { eliminarTarea(it) }
+        adaptador = TareaAdaptador(tasks) { eliminarTarea(it) }
         rvTareas.adapter = adaptador
 
         // Configuración de Swipe to Delete para eliminar tareas al deslizar
@@ -95,16 +95,21 @@ class MainActivity : ComponentActivity() {
      * @param position La posición de la tarea a eliminar.
      */
     private fun eliminarTarea(position: Int) {
+        val task = tasks[position]
+
         // Elimina la tarea de la lista
-        tareas.removeAt(position)
+        tasks.removeAt(position)
         adaptador.notifyDataSetChanged()
-        prefs.salvarInformacion(tareas)
+
+        // Elimina la tarea de la base de datos usando el id de la tarea específica
+        (application as TaskApplication).dbHelper.deleteTarea(task.id)
 
         // Reproduce sonido si el MediaPlayer para eliminar está inicializado
         if (::mediaPlayer.isInitialized) {
             mediaPlayer.start()
         }
     }
+
 
     /**
      * Inicializa las vistas de la interfaz de usuario.
@@ -115,24 +120,8 @@ class MainActivity : ComponentActivity() {
         rvTareas = findViewById(R.id.rvTareas)
     }
 
-    /**
-     * Inicializa los oyentes para los eventos de la interfaz de usuario.
-     */
-    private fun initListeners() {
-        botonAceptar.setOnClickListener { anyadirTarea() }
-    }
 
-    /**
-     * Añade una tarea a la lista tomando el texto del EditText.
-     * Limpia el EditText después de añadir la tarea.
-     */
-    private fun anyadirTarea() {
-        val tareaAAnyadir = textoEmail.text.toString().trim()
-        if (tareaAAnyadir.isNotEmpty()) {
-            addTask(tareaAAnyadir)
-            textoEmail.setText("")
-        }
-    }
+    
 
     /**
      * Libera el MediaPlayer cuando la actividad se destruye para evitar fugas de memoria.

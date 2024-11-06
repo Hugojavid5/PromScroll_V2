@@ -1,89 +1,49 @@
-package com.hugo.scroll_infinito
-
+package com.hugo.scroll_infinito;
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-/**
- * Representa una tarea con un ID único y una descripción.
- *
- * @property id El ID único de la tarea en la base de datos.
- * @property description La descripción de la tarea.
- */
 data class Task(
-    val id: Long,            // ID único para cada tarea en la base de datos
-    val description: String   // Descripción de la tarea
+    val id: Long,
+    val tarea: String
 )
-/**
- * Ayudante de base de datos para gestionar las operaciones relacionadas con las tareas.
- *
- * @param context El contexto de la aplicación, usado para crear la base de datos.
- */
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     companion object {
         private const val DATABASE_NAME = "tasks.db"
         private const val DATABASE_VERSION = 1
-        private const val TABLE_TASKS = "tasks"
+        private const val TABLA_TAREA = "tasks"
         private const val COLUMN_ID = "id"
-        private const val COLUMN_DESCRIPTION = "description"
+        private const val COLUMN_TAREA = "tarea"
     }
-    /**
-     * Crea la tabla de tareas en la base de datos.
-     *
-     * @param db La base de datos en la que se crea la tabla.
-     */
     override fun onCreate(db: SQLiteDatabase) {
-        val createTable = "CREATE TABLE $TABLE_TASKS ($COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT, $COLUMN_DESCRIPTION TEXT)"
+        val createTable = "CREATE TABLE $TABLA_TAREA ($COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT, $COLUMN_TAREA TEXT)"
         db.execSQL(createTable)
     }
-    /**
-     * Actualiza la base de datos al cambiar la versión.
-     *
-     * @param db La base de datos que se está actualizando.
-     * @param oldVersion La versión anterior de la base de datos.
-     * @param newVersion La nueva versión de la base de datos.
-     */
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        db.execSQL("DROP TABLE IF EXISTS $TABLE_TASKS")
+        db.execSQL("DROP TABLE IF EXISTS $TABLA_TAREA")
         onCreate(db)
     }
-    /**
-     * Añade una nueva tarea a la base de datos.
-     *
-     * @param description La descripción de la tarea a añadir.
-     * @return El ID de la tarea recién añadida.
-     */
-    fun addTask(description: String): Long {
+    fun addTarea(tarea: String): Long {
         val db = writableDatabase
-        val values = ContentValues().apply { put(COLUMN_DESCRIPTION, description) }
-        return db.insert(TABLE_TASKS, null, values)
+        val values = ContentValues().apply { put(COLUMN_TAREA, tarea) }
+        return db.insert(TABLA_TAREA, null, values)
     }
-    /**
-     * Recupera todas las tareas de la base de datos.
-     *
-     * @return Una lista mutable de tareas.
-     */
-    fun getTasks(): MutableList<Task> {
+    fun getTodasTareas(): MutableList<Task> {
         val tasks = mutableListOf<Task>()
         val db = readableDatabase
-        val cursor = db.query(TABLE_TASKS, arrayOf(COLUMN_ID, COLUMN_DESCRIPTION), null, null, null, null, null)
+        val cursor = db.query(TABLA_TAREA, arrayOf(COLUMN_ID, COLUMN_TAREA), null, null, null, null, null)
         with(cursor) {
             while (moveToNext()) {
                 val id = getLong(getColumnIndexOrThrow(COLUMN_ID))
-                val description = getString(getColumnIndexOrThrow(COLUMN_DESCRIPTION))
-                tasks.add(Task(id, description))
+                val tarea = getString(getColumnIndexOrThrow(COLUMN_TAREA))
+                tasks.add(Task(id, tarea))
             }
             close()
         }
         return tasks
-    }
-    /**
-     * Elimina una tarea de la base de datos por su ID.
-     *
-     * @param id El ID de la tarea a eliminar.
-     */
-    fun deleteTask(id: Long) {
+    }   fun deleteTarea(id: Long) {
         val db = writableDatabase
-        db.delete(TABLE_TASKS, "$COLUMN_ID=?", arrayOf(id.toString()))
+        db.delete(TABLA_TAREA, "$COLUMN_ID=?", arrayOf(id.toString()))
     }
+
 }
