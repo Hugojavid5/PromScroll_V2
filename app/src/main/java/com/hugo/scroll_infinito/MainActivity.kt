@@ -4,19 +4,14 @@ import android.media.MediaPlayer
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
-
-/**
- * MainActivity es la actividad principal de la aplicación, que permite a los usuarios
- * añadir y eliminar tareas de una lista.
- */
 class MainActivity : ComponentActivity() {
 
-    // Declaración de variables
     private lateinit var botonAceptar: Button
     private lateinit var textoEmail: EditText
     private lateinit var rvTareas: RecyclerView
@@ -25,50 +20,64 @@ class MainActivity : ComponentActivity() {
     private lateinit var mediaPlayer: MediaPlayer
     var tasks = mutableListOf<Task>()
 
-    /**
-     * Método llamado cuando se crea la actividad.
-     * Inicializa la interfaz de usuario y el MediaPlayer.
-     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         initUI()
 
-        // Inicializa el MediaPlayer con el archivo de sonido
+        // Inicializa el MediaPlayer con el sonido para añadir tarea
         mediaPlayer = MediaPlayer.create(this, R.raw.sonido_aniadir)
-        mediaPlayer = MediaPlayer.create(this, R.raw.sonido_eliminar)
     }
 
     /**
-     * Inicializa la interfaz de usuario, incluyendo vistas, oyentes y el RecyclerView.
+     * Método para añadir una nueva tarea a la lista y base de datos.
+     *
+     * @param tarea La tarea que se va a añadir.
+     */
+    private fun anyadirTarea(tareaTexto: String) {
+        // Inserta la tarea en la base de datos y obtiene el ID generado
+        val taskId = (application as TaskApplication).dbHelper.addTarea(tareaTexto)
+
+        // Crea la instancia de Task con el ID obtenido y el texto de la tarea
+        val tarea = Task(id = taskId, tarea = tareaTexto)
+
+        // Añadir la tarea a la lista de tareas
+        tasks.add(tarea)
+
+        // Notificar al adaptador que los datos han cambiado
+        adaptador.notifyDataSetChanged()
+
+        // Mostrar mensaje de éxito
+        Toast.makeText(this, "Tarea añadida", Toast.LENGTH_SHORT).show()
+
+        // Reproduce el sonido de añadir tarea
+        if (::mediaPlayer.isInitialized) {
+            mediaPlayer.start()
+        }
+    }
+
+
+    /**
+     * Inicializa la interfaz de usuario, incluyendo vistas y RecyclerView.
      */
     private fun initUI() {
         initView()
         initRecyclerView()
-    }
 
-    /**
-     * Añade una nueva tarea a la lista y notifica al adaptador sobre el cambio.
-     *
-     * @param newTask La tarea que se va a añadir.
-     */
-    private fun addTask() {
-        val taskToAdd = textoEmail.text.toString().trim()
-        if (taskToAdd.isNotEmpty()) { // Verificar que el campo no esté vacío
-            val dbHelper = (application as TaskApplication).dbHelper
-            val taskId = dbHelper.addTarea(taskToAdd) // Inserta en la base de datos
-            val newTask = Task(id = taskId, tarea = taskToAdd)
-            tasks.add(newTask) // Añadir la nueva tarea a la lista
-            adaptador.notifyDataSetChanged() // Notificar al adaptador que los datos han cambiado
-            textoEmail.setText("") // Limpiar el campo de texto
-            if (::mediaPlayer.isInitialized) {
-                mediaPlayer.start()
+        // Configura el botón para añadir tareas
+        botonAceptar.setOnClickListener {
+            val tareaTexto = textoEmail.text.toString().trim()
+            if (tareaTexto.isNotEmpty()) {
+                anyadirTarea(tareaTexto)
+                textoEmail.setText("")  // Limpia el campo de texto
+            } else {
+                Toast.makeText(this, "Por favor, introduce una tarea", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     /**
-     * Inicializa el RecyclerView y carga las tareas desde las preferencias.
+     * Inicializa el RecyclerView y carga las tareas desde la base de datos.
      */
     private fun initRecyclerView() {
         tasks = (application as TaskApplication).dbHelper.getTodasTareas()
@@ -81,35 +90,34 @@ class MainActivity : ComponentActivity() {
             override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder) = false
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                eliminarTarea(viewHolder.adapterPosition) // Llama al método para eliminar la tarea en la posición desliz
+                eliminarTarea(viewHolder.adapterPosition)
             }
         }
 
-        ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(rvTareas) // Asigna el helper al RecyclerView
-
+        ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(rvTareas)
     }
 
     /**
-     * Elimina una tarea de la lista en la posición especificada y notifica al adaptador.
+     * Elimina una tarea de la lista y la base de datos, y reproduce el sonido de eliminación.
      *
      * @param position La posición de la tarea a eliminar.
      */
     private fun eliminarTarea(position: Int) {
         val task = tasks[position]
 
-        // Elimina la tarea de la lista
+        // Elimina la tarea de la lista y actualiza el adaptador
         tasks.removeAt(position)
-        adaptador.notifyDataSetChanged()
+        adaptador.notifyItemRemoved(position)
 
-        // Elimina la tarea de la base de datos usando el id de la tarea específica
+        // Elimina la tarea de la base de datos
         (application as TaskApplication).dbHelper.deleteTarea(task.id)
 
-        // Reproduce sonido si el MediaPlayer para eliminar está inicializado
+        // Reproduce el sonido de eliminación
+        mediaPlayer = MediaPlayer.create(this, R.raw.sonido_eliminar)
         if (::mediaPlayer.isInitialized) {
             mediaPlayer.start()
         }
     }
-
 
     /**
      * Inicializa las vistas de la interfaz de usuario.
@@ -120,11 +128,8 @@ class MainActivity : ComponentActivity() {
         rvTareas = findViewById(R.id.rvTareas)
     }
 
-
-    
-
     /**
-     * Libera el MediaPlayer cuando la actividad se destruye para evitar fugas de memoria.
+     * Libera el MediaPlayer al destruir la actividad.
      */
     override fun onDestroy() {
         super.onDestroy()
