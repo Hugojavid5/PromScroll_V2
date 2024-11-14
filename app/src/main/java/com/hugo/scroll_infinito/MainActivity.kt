@@ -64,6 +64,15 @@ class MainActivity : ComponentActivity() {
         initView()
         initRecyclerView()
 
+        // Configura el comportamiento al recibir el foco en el campo de texto
+        textoEmail.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                textoEmail.text.clear()  // Borra el texto al recibir el foco
+            } else if (textoEmail.text.isEmpty()) {
+                textoEmail.hint = "Escribe la tarea"  // Vuelve a poner el hint si está vacío
+            }
+        }
+
         // Configura el botón para añadir tareas
         botonAceptar.setOnClickListener {
             val tareaTexto = textoEmail.text.toString().trim()
@@ -75,6 +84,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
 
     /**
      * Inicializa el RecyclerView y carga las tareas desde la base de datos.
